@@ -28,7 +28,8 @@
     }
   },
   "bin": {
-    "vue-to-react-ast": "./dist/cli.js"
+    "vue-to-react-ast": "./dist/cli.js",
+    "react-to-vue-ast": "./dist/cli.js"
   },
   "files": [
     "dist",
