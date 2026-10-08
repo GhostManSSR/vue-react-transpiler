@@ -2,21 +2,22 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
 import {
     convertReactToVue,
+    ReactToVueConversionError,
     convertVueToReact,
 } from './index.js'
 
 function printUsage(): void {
     console.log(`
-        Usage:
-          vue-to-react-ast <input.vue|input.tsx> [output] [--name ComponentName]
-        
-        Examples:
-          vue-to-react-ast ./examples/Button.vue
-          vue-to-react-ast ./Button.vue ./Button.tsx
-          vue-to-react-ast ./Button.vue ./Button.tsx --name AppButton
-          vue-to-react-ast ./Button.tsx
-          vue-to-react-ast ./Button.tsx ./Button.vue
-        `.trim())
+Usage:
+  vue-to-react-ast|react-to-vue-ast <input.vue|input.tsx> [output] [--name ComponentName]
+
+Examples:
+  vue-to-react-ast ./examples/Button.vue
+  vue-to-react-ast ./Button.vue ./Button.tsx
+  vue-to-react-ast ./Button.vue ./Button.tsx --name AppButton
+  vue-to-react-ast ./Button.tsx
+  vue-to-react-ast ./Button.tsx ./Button.vue
+`.trim())
 }
 
 function getOptionValue(
@@ -78,6 +79,19 @@ async function main(): Promise<void> {
 
     await writeFile(outputPath, `${result.code}\n`, 'utf8')
 
+    const diagnostics = result.diagnostics ?? []
+
+    if (diagnostics.length > 0) {
+        console.warn(
+            diagnostics
+                .map(
+                    ({ componentName: diagnosticComponent, construct, message }) =>
+                        `Warning: ${diagnosticComponent}: ${construct} - ${message}`,
+                )
+                .join('\n'),
+        )
+    }
+
     console.log(
         [
             `Converted: ${basename(inputPath)}`,
@@ -90,6 +104,19 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
+    if (error instanceof ReactToVueConversionError) {
+        console.error(
+            [
+                'Conversion stopped. The following constructs need manual migration:',
+                ...error.diagnostics.map(
+                    ({ componentName, construct, message }) =>
+                        `  ${componentName}: ${construct} - ${message}`,
+                ),
+            ].join('\n'),
+        )
+        process.exit(1)
+    }
+
     const message =
         error instanceof Error
             ? error.stack ?? error.message
