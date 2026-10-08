@@ -1,17 +1,22 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
-import { convertVueToReact } from './index.js'
+import {
+    convertReactToVue,
+    convertVueToReact,
+} from './index.js'
 
 function printUsage(): void {
     console.log(`
-Usage:
-  vue-to-react-ast <input.vue> [output.tsx] [--name ComponentName]
-
-Examples:
-  vue-to-react-ast ./examples/Button.vue
-  vue-to-react-ast ./Button.vue ./Button.tsx
-  vue-to-react-ast ./Button.vue ./Button.tsx --name AppButton
-`.trim())
+        Usage:
+          vue-to-react-ast <input.vue|input.tsx> [output] [--name ComponentName]
+        
+        Examples:
+          vue-to-react-ast ./examples/Button.vue
+          vue-to-react-ast ./Button.vue ./Button.tsx
+          vue-to-react-ast ./Button.vue ./Button.tsx --name AppButton
+          vue-to-react-ast ./Button.tsx
+          vue-to-react-ast ./Button.tsx ./Button.vue
+        `.trim())
 }
 
 function getOptionValue(
@@ -53,19 +58,23 @@ async function main(): Promise<void> {
             args[index - 1] !== '--name',
     )
 
+    const isReactInput = /\.(?:tsx|jsx)$/i.test(input)
     const output =
         positionalOutput ??
-        input.replace(/\.vue$/i, '.tsx')
+        input.replace(
+            isReactInput ? /\.(?:tsx|jsx)$/i : /\.vue$/i,
+            isReactInput ? '.vue' : '.tsx',
+        )
 
     const componentName = getOptionValue(args, '--name')
 
     const inputPath = resolve(input)
     const outputPath = resolve(output)
-    const vueSource = await readFile(inputPath, 'utf8')
+    const source = await readFile(inputPath, 'utf8')
 
-    const result = convertVueToReact(vueSource, {
-        componentName,
-    })
+    const result = isReactInput
+        ? convertReactToVue(source, { componentName })
+        : convertVueToReact(source, { componentName })
 
     await writeFile(outputPath, `${result.code}\n`, 'utf8')
 
