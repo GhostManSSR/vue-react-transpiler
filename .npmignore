@@ -1,0 +1,10 @@
+src/
+tests/
+examples/
+coverage/
+*.test.ts
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+.gitignore
+.npmignore
