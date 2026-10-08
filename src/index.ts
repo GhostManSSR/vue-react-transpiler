@@ -8,6 +8,11 @@ import {
     extractProps,
 } from './converters/script.js'
 import { generateReactCode } from './converters/react-ast.js'
+import {
+    convertReactToVue,
+    type ReactToVueOptions,
+    type ReactToVueResult,
+} from './converters/react-vue.js'
 
 function toPascalCase(value: string): string {
     return value
@@ -86,3 +91,9 @@ export type {
     EmitInfo,
     PropInfo,
 } from './types.js'
+
+export {
+    convertReactToVue,
+    type ReactToVueOptions,
+    type ReactToVueResult,
+} from './converters/react-vue.js'
