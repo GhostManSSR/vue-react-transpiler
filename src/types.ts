@@ -20,4 +20,10 @@ export interface ConvertResult {
     componentName: string
     props: PropInfo[]
     emits: string[]
+    diagnostics?: Array<{
+        componentName: string
+        construct: string
+        message: string
+        severity: 'warning' | 'error'
+    }>
 }
